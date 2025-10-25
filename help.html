@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help - MonoBit Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="32x32" href="fav/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Press Start 2P', monospace;
+            line-height: 1.6;
+            overflow-x: hidden;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="10" y="10" width="4" height="4" fill="white" stroke="black" stroke-width="1"/></svg>'), auto;
+            transition: all 0.3s ease;
+        }
+
+        :root {
+            --bg-color: #fff;
+            --text-color: #000;
+            --border-color: #000;
+            --hover-bg: #000;
+            --hover-text: #fff;
+        }
+
+        body.inverted {
+            --bg-color: #000;
+            --text-color: #fff;
+            --border-color: #fff;
+            --hover-bg: #fff;
+            --hover-text: #000;
+        }
+
+        body.pure-bw {
+            filter: contrast(1000%) brightness(1.2);
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.03) 2px,
+                    rgba(0, 255, 0, 0.03) 4px
+                );
+        }
+
+        body.crt-mode .crt-overlay {
+            opacity: 1;
+        }
+
+        body.crt-mode {
+            filter: contrast(1.1) brightness(1.1);
+            text-shadow: 0 0 5px currentColor;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .theme-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 999;
+        }
+
+        .theme-btn {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            padding: 8px 12px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+        }
+
+        .theme-btn:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-2px);
+        }
+
+        .theme-btn.active {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            padding: 8px 12px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+            z-index: 999;
+        }
+
+        .back-link:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-2px);
+        }
+
+        /* Loading Animation */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .pixel-loader {
+            font-size: 20px;
+            letter-spacing: 2px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        header {
+            text-align: center;
+            padding: 80px 0 30px;
+            border-bottom: 3px solid var(--border-color);
+            margin-bottom: 40px;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+        }
+
+        .pixel-logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: var(--text-color);
+            position: relative;
+            border: 3px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .pixel-logo:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .pixel-logo::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border-radius: 50%;
+        }
+
+        .pixel-logo::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border-radius: 50%;
+        }
+
+        .logo {
+            font-size: clamp(24px, 5vw, 36px);
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .page-title {
+            font-size: clamp(14px, 3vw, 20px);
+            margin-top: 20px;
+            letter-spacing: 2px;
+        }
+
+        .help-section {
+            margin-bottom: 50px;
+            padding: 30px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .help-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 0 var(--border-color);
+        }
+
+        .help-section h2 {
+            font-size: 14px;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .help-section h3 {
+            font-size: 11px;
+            margin: 25px 0 15px;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        .help-section p {
+            font-size: 9px;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .help-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .help-list li {
+            font-size: 9px;
+            line-height: 1.8;
+            margin-bottom: 12px;
+            padding-left: 20px;
+            position: relative;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .help-list li:hover {
+            padding-left: 25px;
+            opacity: 0.8;
+        }
+
+        .help-list li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+        }
+
+        .help-list li:hover::before {
+            left: 5px;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .control-item {
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .control-item:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-2px);
+        }
+
+        .control-item strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 9px;
+        }
+
+        .control-item span {
+            font-size: 8px;
+            opacity: 0.8;
+        }
+
+        .control-item:hover span {
+            opacity: 1;
+        }
+
+        .faq-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateX(5px);
+            box-shadow: -5px 0 0 var(--border-color);
+        }
+
+        .faq-question {
+            font-size: 10px;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .faq-question::before {
+            content: '?';
+            position: absolute;
+            left: 0;
+            border: 1px solid var(--text-color);
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            border-radius: 50%;
+        }
+
+        .faq-answer {
+            font-size: 9px;
+            line-height: 1.8;
+            opacity: 0.85;
+            letter-spacing: 0.5px;
+            padding-left: 20px;
+        }
+
+        .faq-item:hover .faq-answer {
+            opacity: 1;
+        }
+
+        .tip-box {
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            margin: 20px 0;
+            background: var(--bg-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .tip-box:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 0 var(--border-color);
+        }
+
+        .tip-box::before {
+            content: '💡 TIP';
+            display: block;
+            font-size: 8px;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .tip-box p {
+            font-size: 8px;
+            line-height: 1.8;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            border-top: 2px solid var(--border-color);
+            margin-top: 60px;
+        }
+
+        .footer-content {
+            font-size: 8px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+        }
+
+        .footer-link:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-1px);
+        }
+
+        /* Focus states for accessibility */
+        .help-section:focus,
+        .control-item:focus,
+        .faq-item:focus,
+        .theme-btn:focus,
+        .footer-link:focus,
+        .back-link:focus {
+            outline: 2px solid var(--border-color);
+            outline-offset: 2px;
+        }
+
+        #bgMusic {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .theme-controls {
+                position: static;
+                justify-content: center;
+                margin-bottom: 20px;
+                padding: 0 20px;
+                flex-wrap: wrap;
+            }
+
+            .back-link {
+                position: static;
+                display: block;
+                width: fit-content;
+                margin: 0 auto 20px;
+            }
+
+            header {
+                padding: 50px 0 30px;
+            }
+
+            .help-section {
+                padding: 20px;
+            }
+
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .help-section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <audio id="bgMusic" loop>
+        <source src="assets/audio/game-music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="crt-overlay"></div>
+
+    <!-- Loading Screen -->
+    <div class="loading" id="loading">
+        <div class="pixel-loader">LOADING...</div>
+    </div>
+
+    <a href="index.html" class="back-link">← BACK</a>
+
+    <div class="theme-controls">
+        <button class="theme-btn" id="crtToggle">CRT</button>
+        <button class="theme-btn" id="invertToggle">INV</button>
+        <button class="theme-btn" id="pureToggle">B&W</button>
+        <button class="theme-btn" id="soundToggle">SFX</button>
+        <button class="theme-btn" id="musicToggle">MUSIC</button>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <div class="pixel-logo"></div>
+                <h1 class="logo">MONOBIT</h1>
+                <h2 class="page-title">HELP & GUIDE</h2>
+            </div>
+        </header>
+
+        <main>
+            <!-- Getting Started -->
+            <section class="help-section">
+                <h2>GETTING STARTED</h2>
+                <p>Welcome to MonoBit Arcade! This minimal retro gaming hub features classic games in pure black and white. Navigate through our collection and start playing instantly.</p>
+                
+                <h3>HOW TO PLAY</h3>
+                <ul class="help-list">
+                    <li>Click on any game card to view details</li>
+                    <li>Press the PLAY button to launch the game</li>
+                    <li>Each game opens in a new window</li>
+                    <li>Use keyboard or mouse controls as indicated</li>
+                </ul>
+            </section>
+
+            <!-- Theme Controls -->
+            <section class="help-section">
+                <h2>THEME CONTROLS</h2>
+                <p>Customize your viewing experience with our retro display modes:</p>
+                
+                <div class="control-grid">
+                    <div class="control-item">
+                        <strong>CRT MODE</strong>
+                        <span>Adds scanlines for authentic CRT monitor effect</span>
+                    </div>
+                    <div class="control-item">
+                        <strong>INVERT</strong>
+                        <span>Swaps black and white colors (white background)</span>
+                    </div>
+                    <div class="control-item">
+                        <strong>B&W</strong>
+                        <span>Pure black & white high contrast mode</span>
+                    </div>
+                    <div class="control-item">
+                        <strong>SFX</strong>
+                        <span>Toggle sound effects on/off</span>
+                    </div>
+                    <div class="control-item">
+                        <strong>MUSIC</strong>
+                        <span>Toggle background music on/off</span>
+                    </div>
+                </div>
+
+                <div class="tip-box">
+                    <p>Combine modes for different effects! Try CRT + INVERT for a classic green screen terminal look.</p>
+                </div>
+            </section>
+
+            <!-- Navigation -->
+            <section class="help-section">
+                <h2>NAVIGATION</h2>
+                
+                <h3>KEYBOARD SHORTCUTS</h3>
+                <ul class="help-list">
+                    <li>ARROW KEYS: Navigate between game cards</li>
+                    <li>ENTER/SPACE: Select focused game</li>
+                    <li>TAB: Move through interactive elements</li>
+                    <li>ESC: Close game windows (browser dependent)</li>
+                </ul>
+
+                <h3>MOUSE CONTROLS</h3>
+                <ul class="help-list">
+                    <li>CLICK: Select games and buttons</li>
+                    <li>HOVER: Preview game cards with sound effect</li>
+                    <li>SCROLL: Navigate through game library</li>
+                </ul>
+
+                <h3>TOUCH CONTROLS (MOBILE)</h3>
+                <ul class="help-list">
+                    <li>TAP: Select games and controls</li>
+                    <li>SWIPE: Scroll through content</li>
+                    <li>Haptic feedback on supported devices</li>
+                </ul>
+            </section>
+
+            <!-- Game Library -->
+            <section class="help-section">
+                <h2>GAME LIBRARY</h2>
+                <p>Our collection includes classic puzzle, arcade, and strategy games:</p>
+                
+                <ul class="help-list">
+                    <li>MEMORY: Classic card matching game</li>
+                </ul>
+            </section>
+
+            <!-- FAQ -->
+            <section class="help-section">
+                <h2>FREQUENTLY ASKED QUESTIONS</h2>
+                
+                <div class="faq-item">
+                    <div class="faq-question">Why is the sound not working?</div>
+                    <div class="faq-answer">Browsers require user interaction before playing audio. Click anywhere on the page first, then toggle the SFX or MUSIC buttons. Make sure your device is not muted.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Can I play on mobile devices?</div>
+                    <div class="faq-answer">Yes! All games are optimized for mobile play. Some games may work better in landscape mode. Touch controls are supported throughout.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Do games save progress?</div>
+                    <div class="faq-answer">Individual games may have their own save features. Check each game's instructions. Browser storage is used when available.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Why black and white only?</div>
+                    <div class="faq-answer">MonoBit embraces minimal retro aesthetics. The monochrome design reduces visual noise and creates a focused, nostalgic gaming experience.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Are there more games coming?</div>
+                    <div class="faq-answer">Yes! We're working toward our goal of 100 games. New retro classics are added regularly. Check back often for updates.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">How do I report bugs or issues?</div>
+                    <div class="faq-answer">Visit our GitHub repository (link in footer) to report issues or contribute. Your feedback helps improve the arcade experience.</div>
+                </div>
+            </section>
+
+            <!-- Tips & Tricks -->
+            <section class="help-section">
+                <h2>TIPS & TRICKS</h2>
+                
+                <ul class="help-list">
+                    <li>Use CRT mode for reduced eye strain during long play sessions</li>
+                    <li>Turn off sound effects in quiet environments</li>
+                    <li>Inverted mode can be easier on the eyes in dark rooms</li>
+                    <li>Most games support both keyboard and mouse controls</li>
+                    <li>Bookmark your favorite games for quick access</li>
+                    <li>Clear browser cache if games don't load properly</li>
+                    <li>Try different theme combinations for varied experiences</li>
+                    <li>Use keyboard navigation for faster game selection</li>
+                </ul>
+            </section>
+
+            <!-- Accessibility -->
+            <section class="help-section">
+                <h2>ACCESSIBILITY</h2>
+                <p>We strive to make MonoBit accessible to all players:</p>
+                
+                <ul class="help-list">
+                    <li>Full keyboard navigation support</li>
+                    <li>Screen reader compatible markup</li>
+                    <li>High contrast black/white design</li>
+                    <li>Adjustable visual modes (CRT, Inverted, Pure B&W)</li>
+                    <li>Optional sound effects and music</li>
+                    <li>Responsive design for all screen sizes</li>
+                    <li>Touch and mouse support</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                © 2025 MONOBIT - AIZEN GAMING
+            </div>
+            <div class="footer-links">
+                <a href="index.html" class="footer-link">HOME</a>
+                <a href="https://x.com/Mon0Bit" class="footer-link">COMMUNITY</a>
+                <a href="about.html" class="footer-link">ABOUT</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let audioContext;
+        let soundEnabled = true;
+        let musicEnabled = true;
+        let crtMode = false;
+        let invertMode = false;
+        let pureMode = false;
+        const bgMusic = document.getElementById('bgMusic');
+
+        // Loading animation
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+            }, 800);
+        });
+
+        function initAudio() {
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    soundEnabled = false;
+                    document.getElementById('soundToggle').classList.remove('active');
+                }
+            }
+            
+            try {
+                bgMusic.volume = 0.3;
+                if (musicEnabled) {
+                    const playPromise = bgMusic.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.log("Autoplay prevented:", error);
+                            document.getElementById('musicToggle').textContent = "▶ MUSIC";
+                        });
+                    }
+                }
+            } catch (e) {
+                console.log("Music initialization error:", e);
+            }
+        }
+
+        function playBeep(frequency = 800, duration = 100) {
+            if (!soundEnabled || !audioContext) return;
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration / 1000);
+            } catch (e) {}
+        }
+
+        function vibrate(duration = 20) {
+            if (navigator.vibrate) {
+                try {
+                    navigator.vibrate(duration);
+                } catch (e) {}
+            }
+        }
+
+        document.getElementById('crtToggle').addEventListener('click', function() {
+            crtMode = !crtMode;
+            document.body.classList.toggle('crt-mode', crtMode);
+            this.classList.toggle('active', crtMode);
+            playBeep(crtMode ? 1000 : 600, 100);
+            vibrate(30);
+        });
+
+        document.getElementById('invertToggle').addEventListener('click', function() {
+            invertMode = !invertMode;
+            document.body.classList.toggle('inverted', invertMode);
+            this.classList.toggle('active', invertMode);
+            playBeep(invertMode ? 800 : 500, 100);
+            vibrate(30);
+        });
+
+        document.getElementById('pureToggle').addEventListener('click', function() {
+            pureMode = !pureMode;
+            document.body.classList.toggle('pure-bw', pureMode);
+            this.classList.toggle('active', pureMode);
+            playBeep(pureMode ? 1200 : 400, 100);
+            vibrate(30);
+        });
+
+        document.getElementById('soundToggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            this.classList.toggle('active', soundEnabled);
+            playBeep(600, 150);
+            vibrate(30);
+        });
+
+        document.getElementById('musicToggle').addEventListener('click', function() {
+            musicEnabled = !musicEnabled;
+            this.classList.toggle('active', musicEnabled);
+            
+            if (musicEnabled) {
+                this.textContent = "MUSIC";
+                const playPromise = bgMusic.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Playback prevented:", error);
+                        this.textContent = "▶ MUSIC";
+                        musicEnabled = false;
+                        this.classList.remove('active');
+                    });
+                }
+            } else {
+                bgMusic.pause();
+                bgMusic.currentTime = 0;
+            }
+            
+            playBeep(700, 100);
+            vibrate(20);
+        });
+
+        // Interactive logo
+        document.querySelector('.pixel-logo').addEventListener('mouseenter', () => {
+            playBeep(500, 40);
+        });
+
+        document.querySelector('.pixel-logo').addEventListener('click', () => {
+            playBeep(800, 80);
+            vibrate(30);
+        });
+
+        // Interactive sections
+        document.querySelectorAll('.help-section').forEach(section => {
+            section.addEventListener('mouseenter', () => {
+                playBeep(250, 25);
+            });
+            
+            section.addEventListener('click', () => {
+                playBeep(400, 50);
+                vibrate(20);
+            });
+        });
+
+        // Interactive list items
+        document.querySelectorAll('.help-list li').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                playBeep(200, 20);
+            });
+            
+            item.addEventListener('click', () => {
+                playBeep(500, 60);
+                vibrate(15);
+            });
+        });
+
+        // Interactive control items
+        document.querySelectorAll('.control-item').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                playBeep(300, 30);
+            });
+            
+            item.addEventListener('click', () => {
+                playBeep(600, 70);
+                vibrate(25);
+            });
+        });
+
+        // Interactive FAQ items
+        document.querySelectorAll('.faq-item').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                playBeep(350, 35);
+            });
+            
+            item.addEventListener('click', () => {
+                playBeep(700, 80);
+                vibrate(30);
+            });
+        });
+
+        // Interactive tip boxes
+        document.querySelectorAll('.tip-box').forEach(box => {
+            box.addEventListener('mouseenter', () => {
+                playBeep(400, 40);
+            });
+            
+            box.addEventListener('click', () => {
+                playBeep(800, 90);
+                vibrate(25);
+            });
+        });
+
+        // Footer and back link
+        document.querySelectorAll('.footer-link, .back-link').forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                playBeep(250, 25);
+            });
+
+            link.addEventListener('click', function() {
+                playBeep(500, 100);
+                vibrate(25);
+            });
+        });
+
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+    </script>
+</body>
+</html>

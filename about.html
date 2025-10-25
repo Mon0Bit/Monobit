@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - MonoBit Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="32x32" href="fav/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Press Start 2P', monospace;
+            line-height: 1.6;
+            overflow-x: hidden;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="10" y="10" width="4" height="4" fill="white" stroke="black" stroke-width="1"/></svg>'), auto;
+            transition: all 0.3s ease;
+        }
+
+        :root {
+            --bg-color: #fff;
+            --text-color: #000;
+            --border-color: #000;
+            --hover-bg: #000;
+            --hover-text: #fff;
+        }
+
+        body.inverted {
+            --bg-color: #000;
+            --text-color: #fff;
+            --border-color: #fff;
+            --hover-bg: #fff;
+            --hover-text: #000;
+        }
+
+        body.pure-bw {
+            filter: contrast(1000%) brightness(1.2);
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.03) 2px,
+                    rgba(0, 255, 0, 0.03) 4px
+                );
+        }
+
+        body.crt-mode .crt-overlay {
+            opacity: 1;
+        }
+
+        body.crt-mode {
+            filter: contrast(1.1) brightness(1.1);
+            text-shadow: 0 0 5px currentColor;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .theme-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 999;
+        }
+
+        .theme-btn {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            padding: 8px 12px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+        }
+
+        .theme-btn:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-2px);
+        }
+
+        .theme-btn.active {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            padding: 8px 12px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+            z-index: 999;
+        }
+
+        .back-link:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-2px);
+        }
+
+        header {
+            text-align: center;
+            padding: 80px 0 30px;
+            border-bottom: 3px solid var(--border-color);
+            margin-bottom: 40px;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+        }
+
+        .pixel-logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: var(--text-color);
+            position: relative;
+            border: 3px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .pixel-logo:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .pixel-logo::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border-radius: 50%;
+        }
+
+        .pixel-logo::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border-radius: 50%;
+        }
+
+        .logo {
+            font-size: clamp(20px, 4vw, 32px);
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: clamp(8px, 2vw, 12px);
+            color: var(--text-color);
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .content-section {
+            margin-bottom: 50px;
+            padding: 30px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .content-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 0 var(--border-color);
+        }
+
+        .section-title {
+            font-size: 14px;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-content {
+            font-size: 9px;
+            line-height: 1.8;
+            letter-spacing: 0.5px;
+        }
+
+        .section-content p {
+            margin-bottom: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 20px 15px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-2px);
+        }
+
+        .stat-number {
+            font-size: clamp(20px, 4vw, 28px);
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+        }
+
+        .stat-label {
+            font-size: clamp(7px, 2vw, 9px);
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .stat-card:hover .stat-label {
+            opacity: 1;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .feature-list li {
+            font-size: 9px;
+            line-height: 1.8;
+            margin-bottom: 12px;
+            padding-left: 20px;
+            position: relative;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .feature-list li:hover {
+            padding-left: 25px;
+            opacity: 0.8;
+        }
+
+        .feature-list li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            transition: all 0.2s ease;
+        }
+
+        .feature-list li:hover::before {
+            left: 5px;
+        }
+
+        .pixel-art-box {
+            width: 100px;
+            height: 100px;
+            margin: 30px auto;
+            border: 3px solid var(--border-color);
+            background: var(--bg-color);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .pixel-art-box:hover {
+            transform: rotate(45deg) scale(1.1);
+        }
+
+        .pixel-art-box::before,
+        .pixel-art-box::after {
+            content: '';
+            position: absolute;
+            background: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .pixel-art-box::before {
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .pixel-art-box::after {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: transparent;
+        }
+
+        .pixel-art-box:hover::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+        .team-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .team-member {
+            display: inline-block;
+            margin: 15px;
+            padding: 25px 30px;
+            border: 2px solid var(--border-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .team-member:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-3px);
+        }
+
+        .team-name {
+            font-size: clamp(10px, 2.5vw, 14px);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .team-role {
+            font-size: clamp(8px, 2vw, 10px);
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+
+        .team-member:hover .team-role {
+            opacity: 1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            border-top: 2px solid var(--border-color);
+            margin-top: 60px;
+        }
+
+        .footer-content {
+            font-size: 8px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+        }
+
+        .footer-link:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-1px);
+        }
+
+        #bgMusic {
+            display: none;
+        }
+
+        /* Loading Animation */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .pixel-loader {
+            font-size: 20px;
+            letter-spacing: 2px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .theme-controls {
+                position: static;
+                justify-content: center;
+                margin-bottom: 20px;
+                padding: 0 20px;
+                flex-wrap: wrap;
+            }
+
+            .back-link {
+                position: static;
+                display: block;
+                width: fit-content;
+                margin: 0 auto 20px;
+            }
+
+            header {
+                padding: 50px 0 30px;
+            }
+
+            .content-section {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .team-member {
+                display: block;
+                margin: 15px 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .content-section {
+                padding: 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <audio id="bgMusic" loop>
+        <source src="assets/audio/game-music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="crt-overlay"></div>
+
+    <!-- Loading Screen -->
+    <div class="loading" id="loading">
+        <div class="pixel-loader">LOADING...</div>
+    </div>
+
+    <a href="index.html" class="back-link">← BACK</a>
+
+    <div class="theme-controls">
+        <button class="theme-btn" id="crtToggle">CRT</button>
+        <button class="theme-btn" id="invertToggle">INV</button>
+        <button class="theme-btn" id="pureToggle">B&W</button>
+        <button class="theme-btn" id="soundToggle">SFX</button>
+        <button class="theme-btn" id="musicToggle">MUSIC</button>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <div class="pixel-logo"></div>
+                <h1 class="logo">ABOUT MONOBIT</h1>
+                <p class="tagline">RETRO GAMING REIMAGINED</p>
+            </div>
+        </header>
+
+        <main>
+            <section class="content-section">
+                <h2 class="section-title">OUR MISSION</h2>
+                <div class="pixel-art-box"></div>
+                <div class="section-content">
+                    <p>MONOBIT ARCADE WAS BORN FROM A SIMPLE IDEA: GAMING DOESN'T NEED FLASHY GRAPHICS OR COMPLEX MECHANICS TO BE FUN.</p>
+                    <p>WE BELIEVE IN THE POWER OF MINIMALISM. PURE BLACK AND WHITE. NO DISTRACTIONS. JUST YOU AND THE GAME.</p>
+                    <p>EVERY PIXEL SERVES A PURPOSE. EVERY INTERACTION IS INTENTIONAL. THIS IS GAMING STRIPPED DOWN TO ITS ESSENCE.</p>
+                </div>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">BY THE NUMBERS</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">100</div>
+                        <div class="stat-label">GAMES GOAL</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">100</div>
+                        <div class="stat-label">DAYS CHALLENGE</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">1</div>
+                        <div class="stat-label">GAMES LIVE</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">2</div>
+                        <div class="stat-label">COLORS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">ADS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">FREE</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">WHAT MAKES US DIFFERENT</h2>
+                <ul class="feature-list">
+                    <li>PURE MONOCHROME AESTHETIC - BLACK AND WHITE ONLY</li>
+                    <li>NO REGISTRATION OR LOGIN REQUIRED</li>
+                    <li>ZERO ADVERTISEMENTS OR TRACKING</li>
+                    <li>RETRO CRT MODE FOR AUTHENTIC EXPERIENCE</li>
+                    <li>KEYBOARD AND TOUCH CONTROLS</li>
+                    <li>RESPONSIVE DESIGN FOR ALL DEVICES</li>
+                    <li>COMPLETELY FREE TO PLAY</li>
+                    <li>REGULAR NEW GAME ADDITIONS</li>
+                </ul>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">THE PHILOSOPHY</h2>
+                <div class="section-content">
+                    <p>IN A WORLD OF ENDLESS COLORS, ANIMATIONS, AND EFFECTS, WE CHOSE CONSTRAINTS.</p>
+                    <p>BLACK AND WHITE. PIXEL ART. SIMPLE MECHANICS. THESE LIMITATIONS AREN'T WEAKNESSES, THEY'RE OUR STRENGTH.</p>
+                    <p>WHEN YOU REMOVE THE VISUAL NOISE, WHAT REMAINS IS PURE GAMEPLAY. STRATEGY. SKILL. FOCUS.</p>
+                    <p>THIS IS HOW GAMES WERE MEANT TO BE EXPERIENCED.</p>
+                </div>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">THE TEAM</h2>
+                <div class="team-section">
+                    <div class="team-member">
+                        <div class="team-name">AIZEN</div>
+                        <div class="team-role">CREATOR & DEVELOPER</div>
+                    </div>
+                </div>
+                <div class="section-content" style="margin-top: 30px;">
+                    <p>BUILDING 100 GAMES IN 100 DAYS. ONE GAME EVERY DAY. A CHALLENGE TO PUSH THE LIMITS OF MINIMAL GAME DESIGN.</p>
+                </div>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">GAME COLLECTION</h2>
+                <div class="section-content">
+                    <p>THE PLAN: 100 GAMES IN 100 DAYS. ONE GAME RELEASED EVERY SINGLE DAY.</p>
+                    <p>PUZZLE CHALLENGES. REFLEX TESTS. STRATEGY BATTLES. MEMORY GAMES. WORD PUZZLES. LOGIC GRIDS. ARCADE CLASSICS REIMAGINED.</p>
+                    <p>EACH GAME STRIPPED TO ITS CORE MECHANICS. BLACK AND WHITE. NO COMPROMISES.</p>
+                </div>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">TECHNICAL DETAILS</h2>
+                <div class="section-content">
+                    <p>BUILT WITH PURE HTML, CSS, AND JAVASCRIPT. NO FRAMEWORKS. NO BLOAT. JUST CLEAN, EFFICIENT CODE.</p>
+                    <p>EVERY LINE OF CODE IS VIBECODED - WRITTEN WITH INTENTION, CRAFTED WITH CARE, OPTIMIZED FOR PERFORMANCE.</p>
+                    <p>FULLY RESPONSIVE DESIGN WORKS ON DESKTOP, TABLET, AND MOBILE. KEYBOARD NAVIGATION AND ACCESSIBILITY FEATURES INCLUDED.</p>
+                    <p>OPTIONAL CRT FILTER FOR AUTHENTIC RETRO EXPERIENCE. SOUND EFFECTS AND HAPTIC FEEDBACK FOR IMMERSION.</p>
+                </div>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">WEB3 FUTURE</h2>
+                <div class="section-content">
+                    <p>WEB3 INTEGRATION IS BEING EXPLORED FOR FUTURE IMPLEMENTATION. THE VISION INCLUDES ON-CHAIN ACHIEVEMENTS, NFT COLLECTIBLES, AND DECENTRALIZED LEADERBOARDS.</p>
+                    <p>IMPLEMENTATION DETAILS ARE STILL UNDECIDED. THE FOCUS REMAINS ON MAINTAINING THE MINIMAL AESTHETIC WHILE EXPLORING BLOCKCHAIN POSSIBILITIES.</p>
+                    <p>MORE INFORMATION COMING SOON AS THE PROJECT EVOLVES.</p>
+                </div>
+            </section>
+
+            <section class="content-section">
+                <h2 class="section-title">JOIN THE MOVEMENT</h2>
+                <div class="section-content">
+                    <p>MONOBIT ISN'T JUST A GAME COLLECTION - IT'S A STATEMENT.</p>
+                    <p>SHARE YOUR FAVORITE GAMES. CHALLENGE YOUR FRIENDS. SPREAD THE WORD ABOUT MINIMAL GAME DESIGN.</p>
+                    <p>HELP PROVE THAT GREAT GAMES DON'T NEED FANCY GRAPHICS OR MILLION-DOLLAR BUDGETS.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                © 2025 MONOBIT - AIZEN GAMING
+            </div>
+            <div class="footer-links">
+                <a href="index.html" class="footer-link">HOME</a>
+                <a href="https://x.com/Mon0Bit" class="footer-link">COMMUNITY</a>
+                <a href="help.html" class="footer-link">HELP</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let audioContext;
+        let soundEnabled = true;
+        let musicEnabled = true;
+        let crtMode = false;
+        let invertMode = false;
+        let pureMode = false;
+        const bgMusic = document.getElementById('bgMusic');
+
+        // Loading animation
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+            }, 800);
+        });
+
+        function initAudio() {
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    soundEnabled = false;
+                    document.getElementById('soundToggle').classList.remove('active');
+                }
+            }
+            
+            try {
+                bgMusic.volume = 0.3;
+                if (musicEnabled) {
+                    const playPromise = bgMusic.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.log("Autoplay prevented:", error);
+                            document.getElementById('musicToggle').textContent = "▶ MUSIC";
+                        });
+                    }
+                }
+            } catch (e) {
+                console.log("Music initialization error:", e);
+            }
+        }
+
+        function playBeep(frequency = 800, duration = 100) {
+            if (!soundEnabled || !audioContext) return;
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration / 1000);
+            } catch (e) {}
+        }
+
+        function vibrate(duration = 20) {
+            if (navigator.vibrate) {
+                try {
+                    navigator.vibrate(duration);
+                } catch (e) {}
+            }
+        }
+
+        document.getElementById('crtToggle').addEventListener('click', function() {
+            crtMode = !crtMode;
+            document.body.classList.toggle('crt-mode', crtMode);
+            this.classList.toggle('active', crtMode);
+            playBeep(crtMode ? 1000 : 600, 100);
+            vibrate(30);
+        });
+
+        document.getElementById('invertToggle').addEventListener('click', function() {
+            invertMode = !invertMode;
+            document.body.classList.toggle('inverted', invertMode);
+            this.classList.toggle('active', invertMode);
+            playBeep(invertMode ? 800 : 500, 100);
+            vibrate(30);
+        });
+
+        document.getElementById('pureToggle').addEventListener('click', function() {
+            pureMode = !pureMode;
+            document.body.classList.toggle('pure-bw', pureMode);
+            this.classList.toggle('active', pureMode);
+            playBeep(pureMode ? 1200 : 400, 100);
+            vibrate(30);
+        });
+
+        document.getElementById('soundToggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            this.classList.toggle('active', soundEnabled);
+            playBeep(600, 150);
+            vibrate(30);
+        });
+
+        document.getElementById('musicToggle').addEventListener('click', function() {
+            musicEnabled = !musicEnabled;
+            this.classList.toggle('active', musicEnabled);
+            
+            if (musicEnabled) {
+                this.textContent = "MUSIC";
+                const playPromise = bgMusic.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Playback prevented:", error);
+                        this.textContent = "▶ MUSIC";
+                        musicEnabled = false;
+                        this.classList.remove('active');
+                    });
+                }
+            } else {
+                bgMusic.pause();
+                bgMusic.currentTime = 0;
+            }
+            
+            playBeep(700, 100);
+            vibrate(20);
+        });
+
+        // Interactive logo
+        document.querySelector('.pixel-logo').addEventListener('mouseenter', () => {
+            playBeep(500, 40);
+        });
+
+        document.querySelector('.pixel-logo').addEventListener('click', () => {
+            playBeep(800, 80);
+            vibrate(30);
+        });
+
+        // Interactive sections
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.addEventListener('mouseenter', () => {
+                playBeep(250, 25);
+            });
+            
+            section.addEventListener('click', () => {
+                playBeep(400, 50);
+                vibrate(20);
+            });
+        });
+
+        // Interactive list items
+        document.querySelectorAll('.feature-list li').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                playBeep(200, 20);
+            });
+            
+            item.addEventListener('click', () => {
+                playBeep(500, 60);
+                vibrate(15);
+            });
+        });
+
+        // Interactive stat cards
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                playBeep(300, 30);
+            });
+            
+            card.addEventListener('click', () => {
+                playBeep(600, 70);
+                vibrate(25);
+            });
+        });
+
+        // Interactive team member
+        document.querySelectorAll('.team-member').forEach(member => {
+            member.addEventListener('mouseenter', () => {
+                playBeep(350, 35);
+            });
+            
+            member.addEventListener('click', () => {
+                playBeep(700, 80);
+                vibrate(30);
+            });
+        });
+
+        // Interactive pixel art box
+        document.querySelector('.pixel-art-box').addEventListener('mouseenter', () => {
+            playBeep(400, 40);
+        });
+
+        document.querySelector('.pixel-art-box').addEventListener('click', () => {
+            playBeep(900, 100);
+            vibrate(35);
+        });
+
+        // Footer and back link
+        document.querySelectorAll('.footer-link, .back-link').forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                playBeep(250, 25);
+            });
+
+            link.addEventListener('click', function() {
+                playBeep(500, 100);
+                vibrate(25);
+            });
+        });
+
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+    </script>
+</body>
+</html>

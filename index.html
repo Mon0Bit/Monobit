@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonoBit Arcade - Retro Gaming Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="32x32" href="fav/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Press Start 2P', monospace;
+            line-height: 1.6;
+            overflow-x: hidden;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="10" y="10" width="4" height="4" fill="white" stroke="black" stroke-width="1"/></svg>'), auto;
+            transition: all 0.3s ease;
+        }
+
+        /* CSS Variables for theme switching */
+        :root {
+            --bg-color: #fff;
+            --text-color: #000;
+            --border-color: #000;
+            --hover-bg: #000;
+            --hover-text: #fff;
+        }
+
+        body.inverted {
+            --bg-color: #000;
+            --text-color: #fff;
+            --border-color: #fff;
+            --hover-bg: #fff;
+            --hover-text: #000;
+        }
+
+        body.pure-bw {
+            filter: contrast(1000%) brightness(1.2);
+        }
+
+        /* CRT Filter Overlay */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.03) 2px,
+                    rgba(0, 255, 0, 0.03) 4px
+                );
+        }
+
+        body.crt-mode .crt-overlay {
+            opacity: 1;
+        }
+
+        body.crt-mode {
+            filter: contrast(1.1) brightness(1.1);
+            text-shadow: 0 0 5px currentColor;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Theme Toggle Controls */
+        .theme-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 999;
+        }
+
+        .theme-btn {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            padding: 8px 12px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+        }
+
+        .theme-btn:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-2px);
+        }
+
+        .theme-btn.active {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+        }
+
+        /* Pixel Art Icons */
+        .pixel-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border-color);
+            background: var(--bg-color);
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .pixel-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--text-color);
+            transition: all 0.2s ease;
+        }
+
+        .game-card:hover .pixel-icon {
+            background: var(--hover-bg);
+            border-color: var(--hover-text);
+        }
+
+        .game-card:hover .pixel-icon svg {
+            fill: var(--hover-text);
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 50px 0;
+            border-bottom: 3px solid var(--border-color);
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+        }
+
+        .pixel-logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: var(--text-color);
+            position: relative;
+            border: 3px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pixel-logo::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border-radius: 50%;
+        }
+
+        .pixel-logo::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-color);
+            border-radius: 50%;
+        }
+
+        .logo {
+            font-size: clamp(20px, 4vw, 32px);
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: clamp(8px, 2vw, 12px);
+            color: var(--text-color);
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .cta-button {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            padding: 15px 30px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            letter-spacing: 1px;
+        }
+
+        .cta-button:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-2px);
+        }
+
+        /* Game Grid */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        .game-card {
+            background: var(--bg-color);
+            border: 2px solid var(--border-color);
+            padding: 25px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-card:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 0 var(--border-color);
+        }
+
+        .game-title {
+            font-size: 10px;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            line-height: 1.3;
+        }
+
+        .play-btn {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            letter-spacing: 1px;
+            margin-top: auto;
+        }
+
+        .game-card:hover .play-btn {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            border-color: var(--hover-text);
+        }
+
+        /* About Section */
+        .about {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 2px solid var(--border-color);
+            margin-bottom: 40px;
+        }
+
+        .about h2 {
+            font-size: 16px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .about p {
+            font-size: 10px;
+            line-height: 1.8;
+            max-width: 500px;
+            margin: 0 auto;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            border-top: 2px solid var(--border-color);
+            margin-top: 40px;
+        }
+
+        .footer-content {
+            font-size: 8px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            background: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            letter-spacing: 1px;
+        }
+
+        .footer-link:hover {
+            background: var(--hover-bg);
+            color: var(--hover-text);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .theme-controls {
+                position: static;
+                justify-content: center;
+                margin-bottom: 20px;
+                padding: 0 20px;
+            }
+
+            .game-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .game-card {
+                padding: 20px 15px;
+                min-height: 130px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-grid {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 12px;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+
+            .game-card {
+                padding: 15px 12px;
+                min-height: 120px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .pixel-loader {
+            font-size: 20px;
+            letter-spacing: 2px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Focus states for accessibility */
+        .game-card:focus,
+        .cta-button:focus,
+        .theme-btn:focus,
+        .footer-link:focus {
+            outline: 2px solid var(--border-color);
+            outline-offset: 2px;
+        }
+
+        /* Audio player (hidden) */
+        #bgMusic {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Audio Element -->
+    <audio id="bgMusic" loop>
+        <source src="assets/audio/game-music.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- CRT Overlay -->
+    <div class="crt-overlay"></div>
+
+    <!-- Loading Screen -->
+    <div class="loading" id="loading">
+        <div class="pixel-loader">LOADING...</div>
+    </div>
+
+    <!-- Theme Controls -->
+    <div class="theme-controls">
+        <button class="theme-btn" id="crtToggle">CRT</button>
+        <button class="theme-btn" id="invertToggle">INV</button>
+        <button class="theme-btn" id="pureToggle">B&W</button>
+        <button class="theme-btn" id="soundToggle">SFX</button>
+        <button class="theme-btn" id="musicToggle">MUSIC</button>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo-container">
+                <div class="pixel-logo"></div>
+                <h1 class="logo">MONOBIT</h1>
+                <p class="tagline">MINIMAL RETRO GAMING</p>
+            </div>
+            <a href="#games" class="cta-button">PLAY</a>
+        </header>
+
+
+        <!-- Game Grid -->
+         
+        <main class="game-grid" id="games">
+            <!-- Memory -->
+            <div class="game-card" data-game="memory" tabindex="0">
+                <div class="pixel-icon">
+                    <svg viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="4" height="4" fill="currentColor"/>
+                        <rect x="10" y="4" width="4" height="4" fill="currentColor"/>
+                        <rect x="16" y="4" width="4" height="4" fill="currentColor"/>
+                        <rect x="4" y="10" width="4" height="4" fill="currentColor"/>
+                        <rect x="10" y="10" width="4" height="4" fill="currentColor"/>
+                        <rect x="16" y="10" width="4" height="4" fill="currentColor"/>
+                        <rect x="4" y="16" width="4" height="4" fill="currentColor"/>
+                        <rect x="10" y="16" width="4" height="4" fill="currentColor"/>
+                        <rect x="16" y="16" width="4" height="4" fill="currentColor"/>
+                    </svg>
+                </div>
+                <h2 class="game-title">MEMORY</h2>
+                <a href="/MFCGAME/mfcgame.html" class="play-btn" data-game-link="memory">PLAY</a>
+            </div>
+        </main>
+
+        <!-- About Section -->
+        <section class="about">
+            <h2>ABOUT</h2>
+            <p>MINIMAL RETRO ARCADE IN PURE BLACK & WHITE<br><br>
+            100 GAMES. ZERO NOISE. PURE FOCUS.<br><br>
+            CA: TBA</p>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-content">
+                © 2025 MONOBIT - AIZEN GAMING
+            </div>
+            <div class="footer-links">
+                <a href="https://x.com/Mon0Bit" class="footer-link">COMMUNITY</a>
+                <a href="about.html" class="footer-link">ABOUT</a>
+                <a href="help.html" class="footer-link">HELP</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Audio context and sounds
+        let audioContext;
+        let soundEnabled = true;
+        let musicEnabled = true;
+        let crtMode = false;
+        let invertMode = false;
+        let pureMode = false;
+        const bgMusic = document.getElementById('bgMusic');
+
+        // Initialize audio
+        function initAudio() {
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log("Web Audio API not supported:", e);
+                    soundEnabled = false;
+                    document.getElementById('soundToggle').classList.remove('active');
+                }
+            }
+            
+            // Initialize music
+            try {
+                bgMusic.volume = 0.3;
+                if (musicEnabled) {
+                    const playPromise = bgMusic.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.log("Autoplay prevented:", error);
+                            // Show UI to let user start music
+                            document.getElementById('musicToggle').textContent = "▶ MUSIC";
+                        });
+                    }
+                }
+            } catch (e) {
+                console.log("Music initialization error:", e);
+            }
+        }
+
+        // Play retro beep sound
+        function playBeep(frequency = 800, duration = 100) {
+            if (!soundEnabled || !audioContext) return;
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration / 1000);
+            } catch (e) {
+                console.log("Sound error:", e);
+            }
+        }
+
+        // Vibration feedback
+        function vibrate(duration = 20) {
+            if (navigator.vibrate) {
+                try {
+                    navigator.vibrate(duration);
+                } catch (e) {
+                    console.log("Vibration not supported:", e);
+                }
+            }
+        }
+
+        // Loading animation
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+            }, 800);
+        });
+
+        // Theme toggles
+        document.getElementById('crtToggle').addEventListener('click', function() {
+            crtMode = !crtMode;
+            document.body.classList.toggle('crt-mode', crtMode);
+            this.classList.toggle('active', crtMode);
+            playBeep(crtMode ? 1000 : 600, 100);
+            vibrate(30);
+        });
+
+        document.getElementById('invertToggle').addEventListener('click', function() {
+            invertMode = !invertMode;
+            document.body.classList.toggle('inverted', invertMode);
+            this.classList.toggle('active', invertMode);
+            playBeep(invertMode ? 800 : 500, 100);
+            vibrate(30);
+        });
+
+        document.getElementById('pureToggle').addEventListener('click', function() {
+            pureMode = !pureMode;
+            document.body.classList.toggle('pure-bw', pureMode);
+            this.classList.toggle('active', pureMode);
+            playBeep(pureMode ? 1200 : 400, 100);
+            vibrate(30);
+        });
+
+        document.getElementById('soundToggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            this.classList.toggle('active', soundEnabled);
+            playBeep(600, 150);
+            vibrate(30);
+        });
+
+        document.getElementById('musicToggle').addEventListener('click', function() {
+            musicEnabled = !musicEnabled;
+            this.classList.toggle('active', musicEnabled);
+            
+            if (musicEnabled) {
+                this.textContent = "MUSIC";
+                const playPromise = bgMusic.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Playback prevented:", error);
+                        this.textContent = "▶ MUSIC";
+                        musicEnabled = false;
+                        this.classList.remove('active');
+                    });
+                }
+            } else {
+                bgMusic.pause();
+                bgMusic.currentTime = 0;
+            }
+            
+            playBeep(700, 100);
+            vibrate(20);
+        });
+
+        // Game card interactions
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                playBeep(300, 30);
+            });
+
+            card.addEventListener('click', function() {
+                const game = this.dataset.game;
+                const title = this.querySelector('.game-title').textContent;
+                playBeep(800, 100);
+                vibrate(40);
+                
+                // Flash effect
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+
+            card.addEventListener('touchstart', function() {
+                vibrate(15);
+            });
+
+            // Keyboard support
+            card.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.click();
+                }
+            });
+        });
+
+        // Play button interactions
+        document.querySelectorAll('.play-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                playBeep(800, 100);
+                vibrate(40);
+            });
+        });
+
+        // Smooth scroll for CTA button
+        document.querySelector('.cta-button').addEventListener('click', function(e) {
+            e.preventDefault();
+            playBeep(600, 150);
+            vibrate(30);
+            document.getElementById('games').scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+
+          // Footer link interactions
+        document.querySelectorAll('.footer-link').forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                playBeep(250, 25);
+            });
+
+            link.addEventListener('click', function(e) {
+                playBeep(500, 100);
+                vibrate(25);
+                // Let the link navigate naturally - don't prevent default
+            });
+        });
+
+        // Initialize audio on first user interaction
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+
+        // Enhanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            const focusableElements = document.querySelectorAll('.game-card, .cta-button, .theme-btn, .footer-link, .play-btn');
+            const currentIndex = Array.from(focusableElements).indexOf(document.activeElement);
+            
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                const nextIndex = (currentIndex + 1) % focusableElements.length;
+                focusableElements[nextIndex].focus();
+                playBeep(250, 25);
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                const prevIndex = currentIndex === 0 ? focusableElements.length - 1 : currentIndex - 1;
+                focusableElements[prevIndex].focus();
+                playBeep(250, 25);
+            }
+        });
+    </script>
+</body>
+</html>
