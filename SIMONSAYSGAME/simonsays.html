@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simon Says - Modern</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* New start screen styles */
+        #startScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .menu-back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .menu-back-btn:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-back-btn:active {
+            transform: scale(0.98);
+        }
+
+        #gameTitle {
+            font-size: 3rem;
+            font-weight: 300;
+            color: #fff;
+            margin-bottom: 2rem;
+            text-align: center;
+            letter-spacing: 0.5rem;
+            opacity: 0.9;
+            font-family: 'Courier New', monospace;
+        }
+
+        #startBtn {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 1rem 2rem;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        #startBtn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        #instructions {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            font-weight: 300;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Original game styles below */
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 0;
+            background: transparent;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 8px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .back-btn:hover {
+            border-color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .back-btn:active {
+            transform: scale(0.98);
+        }
+
+        .game-title {
+            font-weight: 700;
+            font-size: 24px;
+            letter-spacing: 2px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            width: 320px;
+            height: 320px;
+            padding: 28px;
+            background: #111111;
+            border: 2px solid #333333;
+            position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        .game-grid::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #1a1a1a;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .game-grid::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #1a1a1a;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .game-button {
+            background: #000000;
+            color: #ffffff;
+            border: 2px solid #333333;
+            font-size: 32px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 2;
+            font-family: inherit;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        .game-button:hover:not(.disabled) {
+            border-color: #555555;
+            transform: scale(1.02);
+        }
+
+        .game-button:active:not(.disabled) {
+            transform: scale(0.98);
+        }
+
+        .game-button.flash {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .game-button.error {
+            background: #ff0000;
+            color: #ffffff;
+            border-color: #ff0000;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .game-button.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 32px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stat-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 16px 24px;
+            background: #111111;
+            border: 1px solid #333333;
+            min-width: 100px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            font-weight: 400;
+            opacity: 0.6;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .game-status {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 400;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+            letter-spacing: 0.5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            background: transparent;
+            color: #ffffff;
+            border: 2px solid #333333;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        .btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn.primary {
+            border-color: #ffffff;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .btn.primary:hover:not(:disabled) {
+            background: transparent;
+            color: #ffffff;
+        }
+
+        @media (max-width: 600px) {
+            .game-grid {
+                width: 240px;
+                height: 240px;
+                padding: 20px;
+                gap: 6px;
+            }
+            
+            .game-button {
+                font-size: 24px;
+            }
+            
+            .game-title {
+                font-size: 20px;
+            }
+
+            .back-btn {
+                font-size: 10px;
+                padding: 6px 12px;
+            }
+            
+            .stats-container {
+                gap: 24px;
+            }
+            
+            .stat-block {
+                padding: 12px 20px;
+                min-width: 80px;
+            }
+            
+            .stat-value {
+                font-size: 24px;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 11px;
+            }
+
+            #gameTitle {
+                font-size: 2.5rem;
+            }
+
+            .menu-back-btn {
+                font-size: 10px;
+                padding: 6px 12px;
+                top: 15px;
+                left: 15px;
+            }
+
+            #instructions {
+                font-size: 0.7rem;
+                padding: 0 20px;
+            }
+
+            #startBtn {
+                padding: 0.8rem 1.6rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .game-grid {
+                width: 200px;
+                height: 200px;
+                padding: 16px;
+            }
+            
+            .game-button {
+                font-size: 20px;
+            }
+
+            .back-btn {
+                font-size: 9px;
+                padding: 5px 10px;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .stat-block {
+                width: 100%;
+            }
+
+            #gameTitle {
+                font-size: 2rem;
+            }
+
+            #instructions {
+                font-size: 0.6rem;
+            }
+
+            #startBtn {
+                padding: 0.7rem 1.4rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- New start screen -->
+    <div id="startScreen">
+        <button class="menu-back-btn" id="menuBackBtn">← Back</button>
+        <h1 id="gameTitle">SIMON</h1>
+        <button id="startBtn">Start</button>
+        <div id="instructions">
+            Watch and remember the sequence<br>
+            Repeat the pattern correctly<br>
+            Test your memory skills
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="title-container">
+            <button class="back-btn" id="backBtn">← Back</button>
+            <div class="game-title">SIMON</div>
+        </div>
+        
+        <div class="game-grid">
+            <button class="game-button" data-index="0">◆</button>
+            <button class="game-button" data-index="1">▲</button>
+            <button class="game-button" data-index="2">●</button>
+            <button class="game-button" data-index="3">◼</button>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-block">
+                <div class="stat-label">Round</div>
+                <div class="stat-value" id="current-round">0</div>
+            </div>
+            <div class="stat-block">
+                <div class="stat-label">Best</div>
+                <div class="stat-value" id="high-score">0</div>
+            </div>
+        </div>
+        
+        <div class="game-status" id="game-message">Press start to begin</div>
+        
+        <div class="controls">
+            <button class="btn primary" id="start-btn">Start</button>
+            <button class="btn" id="restart-btn" style="display: none;">Reset</button>
+        </div>
+    </div>
+
+    <script>
+        class ModernSimonGame {
+            constructor() {
+                this.sequence = [];
+                this.playerSequence = [];
+                this.round = 0;
+                this.highScore = parseInt(localStorage.getItem('simonHighScore') || '0');
+                this.isShowingSequence = false;
+                this.isPlayerTurn = false;
+                this.gameStarted = false;
+                
+                this.buttons = document.querySelectorAll('.game-button');
+                this.startBtn = document.getElementById('start-btn');
+                this.restartBtn = document.getElementById('restart-btn');
+                this.roundDisplay = document.getElementById('current-round');
+                this.highScoreDisplay = document.getElementById('high-score');
+                this.messageDisplay = document.getElementById('game-message');
+                
+                this.sounds = this.createSounds();
+                this.init();
+            }
+            
+            createSounds() {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const createTone = (frequency, duration = 0.25) => {
+                    return () => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.value = frequency;
+                        oscillator.type = 'square';
+                        
+                        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                        
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + duration);
+                    };
+                };
+                
+                return [
+                    createTone(261.63), // C4
+                    createTone(329.63), // E4
+                    createTone(392.00), // G4
+                    createTone(523.25)  // C5
+                ];
+            }
+            
+            init() {
+                this.updateDisplay();
+                this.attachEventListeners();
+            }
+            
+            attachEventListeners() {
+                this.startBtn.addEventListener('click', () => this.startGame());
+                this.restartBtn.addEventListener('click', () => this.restartGame());
+                
+                this.buttons.forEach((button, index) => {
+                    button.addEventListener('click', () => {
+                        if (this.isPlayerTurn && !this.isShowingSequence) {
+                            this.handlePlayerInput(index);
+                        }
+                    });
+                });
+
+                // Add start screen button listener
+                document.getElementById('startBtn').addEventListener('click', () => {
+                    document.getElementById('startScreen').style.display = 'none';
+                    this.startGame();
+                });
+
+                // Add menu back button listener
+                document.getElementById('menuBackBtn').addEventListener('click', () => {
+                    window.history.back();
+                });
+
+                // Add game back button listener
+                document.getElementById('backBtn').addEventListener('click', () => {
+                    this.goBackToMenu();
+                });
+            }
+
+            goBackToMenu() {
+                this.restartGame();
+                document.querySelector('.game-container').style.display = 'none';
+                document.getElementById('startScreen').style.display = 'flex';
+            }
+            
+            startGame() {
+                document.querySelector('.game-container').style.display = 'flex';
+                this.gameStarted = true;
+                this.sequence = [];
+                this.round = 0;
+                this.startBtn.style.display = 'none';
+                this.restartBtn.style.display = 'inline-block';
+                this.messageDisplay.textContent = 'Watch carefully...';
+                this.setButtonsDisabled(true);
+                this.nextRound();
+            }
+            
+            restartGame() {
+                this.gameStarted = false;
+                this.sequence = [];
+                this.playerSequence = [];
+                this.round = 0;
+                this.isShowingSequence = false;
+                this.isPlayerTurn = false;
+                this.startBtn.style.display = 'inline-block';
+                this.restartBtn.style.display = 'none';
+                this.messageDisplay.textContent = 'Press start to begin';
+                this.updateDisplay();
+                this.clearButtonStates();
+                this.setButtonsDisabled(false);
+            }
+            
+            nextRound() {
+                this.round++;
+                this.playerSequence = [];
+                this.sequence.push(Math.floor(Math.random() * 4));
+                this.updateDisplay();
+                this.showSequence();
+            }
+            
+            async showSequence() {
+                this.isShowingSequence = true;
+                this.isPlayerTurn = false;
+                this.setButtonsDisabled(true);
+                this.messageDisplay.textContent = 'Watch carefully...';
+                
+                await this.delay(600);
+                
+                for (let i = 0; i < this.sequence.length; i++) {
+                    const buttonIndex = this.sequence[i];
+                    await this.flashButton(buttonIndex);
+                    await this.delay(150);
+                }
+                
+                this.isShowingSequence = false;
+                this.isPlayerTurn = true;
+                this.setButtonsDisabled(false);
+                this.messageDisplay.textContent = 'Repeat the sequence';
+            }
+            
+            async flashButton(index, isError = false) {
+                const button = this.buttons[index];
+                const className = isError ? 'error' : 'flash';
+                
+                button.classList.add(className);
+                
+                if (!isError) {
+                    this.sounds[index]();
+                }
+                
+                if (navigator.vibrate && !isError) {
+                    navigator.vibrate(40);
+                }
+                
+                await this.delay(350);
+                button.classList.remove(className);
+            }
+            
+            handlePlayerInput(index) {
+                this.playerSequence.push(index);
+                this.flashButton(index);
+                
+                const currentStep = this.playerSequence.length - 1;
+                
+                if (this.playerSequence[currentStep] !== this.sequence[currentStep]) {
+                    this.gameOver();
+                    return;
+                }
+                
+                if (this.playerSequence.length === this.sequence.length) {
+                    this.isPlayerTurn = false;
+                    this.setButtonsDisabled(true);
+                    this.messageDisplay.textContent = 'Perfect!';
+                    setTimeout(() => this.nextRound(), 800);
+                }
+            }
+            
+            async gameOver() {
+                this.isPlayerTurn = false;
+                this.isShowingSequence = false;
+                this.setButtonsDisabled(true);
+                
+                // Flash all buttons red
+                this.buttons.forEach(button => button.classList.add('error'));
+                
+                // Error sound
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 120;
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.4);
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate([80, 40, 80]);
+                }
+                
+                await this.delay(600);
+                this.clearButtonStates();
+                
+                if (this.round > this.highScore) {
+                    this.highScore = this.round;
+                    localStorage.setItem('simonHighScore', this.highScore.toString());
+                    this.messageDisplay.textContent = `New record: ${this.round}`;
+                } else {
+                    this.messageDisplay.textContent = `Game over: ${this.round}`;
+                }
+                
+                this.updateDisplay();
+            }
+            
+            setButtonsDisabled(disabled) {
+                this.buttons.forEach(button => {
+                    if (disabled) {
+                        button.classList.add('disabled');
+                    } else {
+                        button.classList.remove('disabled');
+                    }
+                });
+            }
+            
+            clearButtonStates() {
+                this.buttons.forEach(button => {
+                    button.classList.remove('flash', 'error');
+                });
+            }
+            
+            updateDisplay() {
+                this.roundDisplay.textContent = this.round;
+                this.highScoreDisplay.textContent = this.highScore;
+            }
+            
+            delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+        
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new ModernSimonGame();
+        });
+        
+        // Enable audio on mobile
+        document.addEventListener('touchstart', function() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }, { once: true });
+    </script>
+</body>
+</html>
